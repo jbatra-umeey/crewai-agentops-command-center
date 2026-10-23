@@ -1,0 +1,32 @@
+services:
+  api:
+    build: ./backend
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      AGENT_MODE: ${AGENT_MODE:-fixture}
+      API_KEY: ${API_KEY:?Set API_KEY in .env}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      CREWAI_MODEL: ${CREWAI_MODEL:-openai/gpt-4o-mini}
+      DECISIONOPS_URL: ${DECISIONOPS_URL:-}
+      EVALOPS_URL: ${EVALOPS_URL:-}
+      MCP_NEXUS_URL: ${MCP_NEXUS_URL:-}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      DECISIONOPS_PATH: ${DECISIONOPS_PATH:-/api/decide}
+      DECISIONOPS_TOKEN: ${DECISIONOPS_TOKEN:-}
+      EVALOPS_PATH: ${EVALOPS_PATH:-/api/evaluate}
+      EVALOPS_TOKEN: ${EVALOPS_TOKEN:-}
+      MCP_NEXUS_PATH: ${MCP_NEXUS_PATH:-/api/execute}
+      MCP_NEXUS_TOKEN: ${MCP_NEXUS_TOKEN:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  dashboard:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on:
+      api: {condition: service_healthy}
